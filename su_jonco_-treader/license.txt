@@ -1,0 +1,11 @@
+Model Information:
+* title:	Su jonco -treader
+* source:	https://sketchfab.com/3d-models/su-jonco-treader-936a1220c906413fb9b526e4c00d997a
+* author:	Itom (https://sketchfab.com/iligrok)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Su jonco -treader" (https://sketchfab.com/3d-models/su-jonco-treader-936a1220c906413fb9b526e4c00d997a) by Itom (https://sketchfab.com/iligrok) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
