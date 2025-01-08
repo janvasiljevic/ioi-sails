@@ -1,4 +1,3 @@
-import { TransformControls } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { patchShaders } from "gl-noise";
 import * as React from "react";
@@ -13,16 +12,16 @@ interface DissolveMaterialProps {
   color?: string;
   intensity?: number;
   debug?: boolean;
+  shipRef: React.MutableRefObject<THREE.Mesh>;
 }
 
 export function DissolveMaterial({
   baseMaterial,
-  mode,
   thickness = 0.1,
   feather = 2,
   color = "#14c445",
   intensity = 5,
-  debug = false,
+  shipRef,
 }: DissolveMaterialProps) {
   const uniforms = React.useMemo(
     () => ({
@@ -39,15 +38,15 @@ export function DissolveMaterial({
       uThickness: { value: thickness },
       uColor: { value: new THREE.Color(color).multiplyScalar(intensity) },
     }),
-    []
+    [color, feather, intensity, thickness]
   );
 
   // prettier-ignore
-  React.useEffect(() => void (uniforms.uFeather.value = feather), [feather]);
+  React.useEffect(() => void (uniforms.uFeather.value = feather), [feather, uniforms.uFeather]);
   // prettier-ignore
-  React.useEffect(() => void (uniforms.uThickness.value = thickness), [thickness]);
+  React.useEffect(() => void (uniforms.uThickness.value = thickness), [thickness, uniforms.uThickness]);
   // prettier-ignore
-  React.useEffect(() => void (uniforms.uColor.value.set(color).multiplyScalar(intensity)), [color, intensity]);
+  React.useEffect(() => void (uniforms.uColor.value.set(color).multiplyScalar(intensity)), [color, intensity, uniforms.uColor.value]);
 
   const vertexShader = React.useMemo(
     () => /* glsl */ `
@@ -125,6 +124,10 @@ export function DissolveMaterial({
 
   useFrame(() => {
     if (!groupRef.current) return;
+
+    // copy position
+    groupRef.current.position.copy(shipRef.current.position);
+
     uniforms.uMatrix.value.copy(groupRef.current.matrixWorld);
   });
 
@@ -140,14 +143,7 @@ export function DissolveMaterial({
         transparent
       />
 
-      {debug && (
-        <TransformControls mode={mode as any} scale={0.5}>
-          <mesh ref={groupRef} scale={10}>
-            <boxGeometry args={[2, 2, 2]} />
-            <meshBasicMaterial wireframe />
-          </mesh>
-        </TransformControls>
-      )}
+      <mesh ref={groupRef} scale={4} />
     </>
   );
 }

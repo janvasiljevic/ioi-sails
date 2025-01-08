@@ -1,0 +1,247 @@
+import { Landmark } from "@mediapipe/tasks-vision";
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { RefLandmarks } from "./types";
+
+type HandProps = {
+  handLandmarkArrayRef: RefLandmarks;
+  shipUpdateFn: (x: number | null, y: number | null, velocity: number) => void;
+};
+
+const connections = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4], // Thumb
+  [0, 5],
+  [5, 6],
+  [6, 7],
+  [7, 8], // Index finger
+  [5, 9],
+  [9, 10],
+  [10, 11],
+  [11, 12], // Middle finger
+  [9, 13],
+  [13, 14],
+  [14, 15],
+  [15, 16], // Ring finger
+  [13, 17],
+  [17, 18],
+  [18, 19],
+  [19, 20], // Pinky
+  [0, 17], // Palm base
+];
+
+const calculateIndexFingerOrientation = (
+  landmarks: Landmark[]
+): { x: number; y: number } => {
+  const baseIndex = 5;
+  const tipIndex = 8;
+
+  const base = new THREE.Vector3(
+    landmarks[baseIndex].x,
+    landmarks[baseIndex].y,
+    0
+  );
+  const tip = new THREE.Vector3(
+    landmarks[tipIndex].x,
+    landmarks[tipIndex].y,
+    0
+  );
+
+  const direction = new THREE.Vector3().subVectors(tip, base).normalize();
+
+  return { x: direction.x, y: direction.y };
+};
+
+const calculateVector = (start: THREE.Vector3, end: THREE.Vector3) => {
+  return new THREE.Vector3().subVectors(end, start).normalize();
+};
+
+const calculateAngle = (v1: THREE.Vector3, v2: THREE.Vector3) => {
+  return v1.angleTo(v2);
+};
+
+const isIndexFingerPointing = (landmarks: Landmark[]): boolean => {
+  const indices = [5, 6, 7, 8];
+
+  const vectors = indices.slice(1).map((idx, i) => {
+    const start = new THREE.Vector3(
+      landmarks[indices[i]].x,
+      landmarks[indices[i]].y,
+      0
+    );
+    const end = new THREE.Vector3(landmarks[idx].x, landmarks[idx].y, 0);
+    return calculateVector(start, end);
+  });
+
+  const angles = vectors.slice(1).map((v, i) => calculateAngle(vectors[i], v));
+  const angleThreshold = Math.PI / 8; // Adjust the threshold as needed
+
+  return angles.every((angle) => angle < angleThreshold);
+};
+
+const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
+  const sphereRefs = useRef<THREE.Mesh[]>([]);
+  const previousPositionsRef = useRef<THREE.Vector3[]>([]);
+  const velocitiesRef = useRef<THREE.Vector3[]>([]);
+  const [size, setSize] = useState(0);
+  const lineRefs = useRef<THREE.Line[]>([]);
+  const [indexFingerOrientation, setIndexFingerOrientation] = useState<{
+    x: number;
+    y: number;
+  }>({ x: 0, y: 0 });
+  const [isPointing, setIsPointing] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Initialize previous positions and velocities with zero vectors
+    previousPositionsRef.current = Array.from(
+      { length: 21 },
+      () => new THREE.Vector3(0, 0, 0)
+    );
+    velocitiesRef.current = Array.from(
+      { length: 21 },
+      () => new THREE.Vector3(0, 0, 0)
+    );
+  }, []);
+
+  useFrame(() => {
+    if (!handLandmarkArrayRef.current) return;
+
+    if (handLandmarkArrayRef.current.length === 0) {
+      setSize((prev) => Math.max(prev - 0.01, 0));
+    } else {
+      setSize(0.1);
+    }
+
+    const landmarks = handLandmarkArrayRef.current[0];
+
+    for (let i = 0; i < 21; i++) {
+      const previousPosition = previousPositionsRef.current[i];
+      const velocity = velocitiesRef.current[i];
+      const sphere = sphereRefs.current[i];
+
+      if (landmarks && landmarks[i]) {
+        const landmark = landmarks[i];
+        const targetPosition = new THREE.Vector3(
+          (landmark.x - 0.5) * -40,
+          3,
+          (landmark.y - 0.5) * 40
+        );
+
+        // Calculate new velocity
+        velocity.copy(targetPosition).sub(previousPosition).multiplyScalar(0.1); // Adjust factor for smoother velocity
+
+        // Lerp the current position to the target position
+        sphere.position.lerp(targetPosition, 0.1); // Adjust the factor (0.1) for smoothing
+
+        // Update the previous position
+        previousPosition.copy(sphere.position);
+      } else {
+        // Apply the velocity to continue moving in the last known direction
+        sphere.position.add(velocity);
+      }
+    }
+
+    for (let i = 0; i < connections.length; i++) {
+      const [start, end] = connections[i];
+      const startPos = sphereRefs.current[start].position;
+      const endPos = sphereRefs.current[end].position;
+
+      const line = lineRefs.current[i];
+      const geometry = line.geometry;
+      const positions = geometry.attributes.position.array;
+
+      positions[0] = startPos.x;
+      positions[1] = startPos.y;
+      positions[2] = startPos.z;
+
+      positions[3] = endPos.x;
+      positions[4] = endPos.y;
+      positions[5] = endPos.z;
+
+      geometry.attributes.position.needsUpdate = true;
+    }
+
+    if (landmarks) {
+      const orientation = calculateIndexFingerOrientation(landmarks);
+      setIndexFingerOrientation(orientation);
+
+      const isPointing = isIndexFingerPointing(landmarks);
+      setIsPointing(isPointing);
+
+      // const center = getCenter(landmarks);
+      // const [x, y] = center;
+      // const [prevX, prevY] = previousCenter.current;
+      // const dx = x - prevX;
+      // const dy = y - prevY;
+      // const vel = Math.sqrt(dx * dx + dy * dy) * 3;
+      // previousCenter.current = center;
+
+      if (isPointing) {
+        shipUpdateFn(orientation.x, orientation.y, 2);
+      } else {
+        shipUpdateFn(null, null, 0);
+      }
+    } else {
+      shipUpdateFn(null, null, 0);
+    }
+  });
+  return (
+    // rotate for 30 degrees
+    <group rotation={[0, Math.PI / 4, 0]}>
+      {Array.from({ length: 21 }).map((_, index) => (
+        <mesh
+          key={index}
+          ref={(el) => {
+            if (el) sphereRefs.current[index] = el;
+          }}
+          position={[0, 0, 0]}
+        >
+          <sphereGeometry attach="geometry" args={[size, 4, 4]} />
+          <meshStandardMaterial
+            color="yellow"
+            emissive={"yellow"}
+            emissiveIntensity={3}
+          />
+        </mesh>
+      ))}
+      {connections.map((_, index) => (
+        <line
+          key={index}
+          ref={(el) => {
+            if (el) lineRefs.current[index] = el as unknown as THREE.Line;
+          }}
+        >
+          <bufferGeometry attach="geometry">
+            <bufferAttribute
+              attach="attributes-position"
+              array={new Float32Array(6)}
+              itemSize={3}
+              count={2}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="white" />
+        </line>
+      ))}
+
+      {isPointing && (
+        <arrowHelper
+          args={[
+            new THREE.Vector3(
+              -indexFingerOrientation.x,
+              0,
+              indexFingerOrientation.y
+            ),
+            new THREE.Vector3(0, 1, 0),
+            5,
+            0xffff00,
+          ]}
+        />
+      )}
+    </group>
+  );
+};
+
+export default Hand3D;

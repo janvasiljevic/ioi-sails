@@ -3,16 +3,22 @@ import {
   HandLandmarker,
   NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+// @ts-expect-error - no types available
 import hand_landmarker_task from "./models/hand_landmarker.task";
+import { RefLandmarks } from "../types";
+import { useControls } from "leva";
 
 type Props = {
-  handLandmarkArrayRef: React.MutableRefObject<NormalizedLandmark[][] | null>;
-  showVideo: boolean;
-  showCanvas: boolean;
+  handLandmarkArrayRef: RefLandmarks;
 };
 
-const Hand = ({ handLandmarkArrayRef, showVideo, showCanvas }: Props) => {
+const HandRecognition = ({ handLandmarkArrayRef }: Props) => {
+  const { showVideo, showCanvas } = useControls({
+    showVideo: false,
+    showCanvas: false,
+  });
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -87,7 +93,6 @@ const Hand = ({ handLandmarkArrayRef, showVideo, showCanvas }: Props) => {
         }
       }
       animationFrameId = requestAnimationFrame(detectHands);
-      //   console.log("animationFrameId", animationFrameId);
     };
 
     const startWebcam = async () => {
@@ -148,4 +153,4 @@ const Hand = ({ handLandmarkArrayRef, showVideo, showCanvas }: Props) => {
   );
 };
 
-export default Hand;
+export default HandRecognition;
