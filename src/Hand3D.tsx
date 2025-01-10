@@ -6,7 +6,11 @@ import { RefLandmarks } from "./types";
 
 type HandProps = {
   handLandmarkArrayRef: RefLandmarks;
-  shipUpdateFn: (x: number | null, y: number | null, velocity: number) => void;
+  shipUpdateFn: (
+    x: number | null,
+    y: number | null,
+    velocity: number | null
+  ) => void;
 };
 
 const connections = [
@@ -171,21 +175,13 @@ const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
       const isPointing = isIndexFingerPointing(landmarks);
       setIsPointing(isPointing);
 
-      // const center = getCenter(landmarks);
-      // const [x, y] = center;
-      // const [prevX, prevY] = previousCenter.current;
-      // const dx = x - prevX;
-      // const dy = y - prevY;
-      // const vel = Math.sqrt(dx * dx + dy * dy) * 3;
-      // previousCenter.current = center;
-
       if (isPointing) {
         shipUpdateFn(orientation.x, orientation.y, 2);
       } else {
-        shipUpdateFn(null, null, 0);
+        shipUpdateFn(null, null, null);
       }
     } else {
-      shipUpdateFn(null, null, 0);
+      shipUpdateFn(null, null, null);
     }
   });
   return (

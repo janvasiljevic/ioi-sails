@@ -5,7 +5,7 @@ import {
 } from "@mediapipe/tasks-vision";
 import { useEffect, useRef } from "react";
 // @ts-expect-error - no types available
-import hand_landmarker_task from "./models/hand_landmarker.task";
+import hand_landmarker_task from "./assets/hand_landmarker.task";
 import { RefLandmarks } from "../types";
 import { useControls } from "leva";
 

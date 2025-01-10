@@ -1,20 +1,21 @@
+import { OrbitControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { useControls } from "leva";
 import { Perf } from "r3f-perf";
-import React, { Suspense, useRef, useState } from "react";
+import React, { Suspense, useRef } from "react";
 import * as THREE from "three";
 import Hand3D from "./Hand3D";
+import { DissolveMaterial } from "./materials/DissolveMaterial";
+import Bird from "./scene/Bird";
 import Ship from "./scene/Ship";
-import WaterPlane from "./scene/WaterPlane";
-import { RefLandmarks, VertexData } from "./types";
+import { RefLandmarks } from "./types";
 
 type Props = {
   landmarksRef: RefLandmarks;
 };
 
 const SceneComposition = ({ landmarksRef }: Props) => {
-  const [waterVertexes, setWaterVertexes] = useState<VertexData[]>([]);
   const shipOrientationRef = useRef<number | null>(null);
   const shipVelocityRef = useRef<number>(0);
   const shipRef = useRef<THREE.Mesh>(null!);
@@ -31,9 +32,8 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     y: number | null,
     velocity: number | null
   ) => {
-    if (x === null || y === null || velocity === null) {
+    if (!x || !y || !velocity) {
       shipOrientationRef.current = null;
-      shipVelocityRef.current = 0;
       return;
     }
 
@@ -43,35 +43,46 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     shipOrientationRef.current = targetAngle;
   };
 
+  const { waterColor } = useControls({
+    waterColor: "#9badb7",
+  });
+
   return (
     <>
       <color attach="background" args={[bgColor]} />
-      {/* fog je nice, sam sele ko mas staticno kamero */}
-      <fog attach="fog" args={["black", 160, 200]} />
+      <fog attach="fog" args={["black", 80, 120]} />
+
+      {/* <OrbitControls /> */}
 
       <FollowShip shipRef={shipRef}>
         <Hand3D handLandmarkArrayRef={landmarksRef} shipUpdateFn={shipUpdate} />
         <directionalLight
-          position={[0, 1, 2]}
+          position={[12, 1, 10]}
           intensity={0.9}
-          color="white"
           castShadow
           ref={directionalLightRef}
         />
         <hemisphereLight intensity={Math.PI / 8} />
       </FollowShip>
 
-      <WaterPlane
-        vertData={waterVertexes}
-        setVertData={setWaterVertexes}
+      <DissolveMaterial
+        baseMaterial={new THREE.MeshStandardMaterial({ color: waterColor })}
+        mode="translate"
+        thickness={0.1}
+        feather={5}
+        color={waterColor}
+        intensity={0}
         shipRef={shipRef}
       />
+
       <Ship
-        waterVertexData={waterVertexes}
         angleRad={shipOrientationRef}
         shipVelocity={shipVelocityRef}
         shipRef={shipRef}
       />
+
+      <Bird shipRef={shipRef} baseRadius={2} initialPhase={100} />
+      <Bird shipRef={shipRef} baseRadius={1} initialPhase={0} />
 
       {showPerf && <Perf position="bottom-right" />}
 

@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { patchShaders } from "gl-noise";
 import * as React from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import CSM from "three-custom-shader-material";
 
@@ -11,7 +12,6 @@ interface DissolveMaterialProps {
   feather?: number;
   color?: string;
   intensity?: number;
-  debug?: boolean;
   shipRef: React.MutableRefObject<THREE.Mesh>;
 }
 
@@ -23,32 +23,71 @@ export function DissolveMaterial({
   intensity = 5,
   shipRef,
 }: DissolveMaterialProps) {
-  const uniforms = React.useMemo(
+  const meshRef = useRef<THREE.Mesh>(null!);
+
+  const uniforms = useMemo(
     () => ({
       uMatrix: {
         value: (() => {
           const o = new THREE.Object3D();
           o.scale.setScalar(5);
           o.updateMatrixWorld();
-
           return o.matrixWorld;
         })(),
       },
       uFeather: { value: feather },
       uThickness: { value: thickness },
       uColor: { value: new THREE.Color(color).multiplyScalar(intensity) },
+      uTime: { value: 0 }, // Time uniform for wave animation
     }),
     [color, feather, intensity, thickness]
   );
 
-  // prettier-ignore
-  React.useEffect(() => void (uniforms.uFeather.value = feather), [feather, uniforms.uFeather]);
-  // prettier-ignore
-  React.useEffect(() => void (uniforms.uThickness.value = thickness), [thickness, uniforms.uThickness]);
-  // prettier-ignore
-  React.useEffect(() => void (uniforms.uColor.value.set(color).multiplyScalar(intensity)), [color, intensity, uniforms.uColor.value]);
+  useEffect(
+    () => void (uniforms.uFeather.value = feather),
+    [feather, uniforms.uFeather]
+  );
+  useEffect(
+    () => void (uniforms.uThickness.value = thickness),
+    [thickness, uniforms.uThickness]
+  );
+  useEffect(
+    () => void uniforms.uColor.value.set(color).multiplyScalar(intensity),
+    [color, intensity, uniforms.uColor.value]
+  );
 
-  const vertexShader = React.useMemo(
+  useEffect(() => {
+    const geometry = new THREE.PlaneGeometry(500, 500, 150, 150);
+    geometry.rotateX(-Math.PI * 0.5);
+
+    const amplitude = new Float32Array(geometry.attributes.position.count);
+    const phase = new Float32Array(geometry.attributes.position.count);
+
+    // Get the position attribute for calculating based on position
+    const positions = geometry.attributes.position.array;
+
+    for (let i = 0; i < geometry.attributes.position.count; i++) {
+      // Use position-based values for more coherent waves
+      const xPos = positions[i * 3];
+      const zPos = positions[i * 3 + 2];
+
+      // Create amplitude based on distance from center
+      const distanceFromCenter = Math.sqrt(xPos * xPos + zPos * zPos) / 100;
+      amplitude[i] = 0.5 * (1 - distanceFromCenter); // Amplitude decreases from center
+
+      // Create phase based on position for traveling waves
+      phase[i] = xPos * 0.1 + zPos * 0.1; // Diagonal wave pattern
+    }
+
+    geometry.setAttribute("amplitude", new THREE.BufferAttribute(amplitude, 1));
+    geometry.setAttribute("phase", new THREE.BufferAttribute(phase, 1));
+
+    if (meshRef.current) {
+      meshRef.current.geometry = geometry;
+    }
+  }, []);
+
+  const vertexShader = useMemo(
     () => /* glsl */ `
       varying vec2 custom_vUv;
       varying vec3 custom_vPosition;
@@ -57,20 +96,32 @@ export function DissolveMaterial({
       uniform vec3 uBoxMin;
       uniform vec3 uBoxMax;
 
+      uniform float uTime;
+
+      attribute float amplitude;  // Per-vertex amplitude
+      attribute float phase;     // Per-vertex phase
+
+
       void main() {
         custom_vUv = uv;
         custom_vPosition = position;
-
+        
+        // Create multiple wave components for more interesting motion
+        float wave1 = sin(uTime * 1.5 + phase) * amplitude;
+        float wave2 = sin(uTime * 2.3 + phase * 1.5) * amplitude * 0.5;
+        
+        // Combine waves
+        csm_Position.y += wave1 + wave2;
+        
         custom_vBoxUv = (position - uBoxMin) / (uBoxMax - uBoxMin);
-      }
+      }}
     `,
     []
   );
 
-  const fragmentShader = React.useMemo(
+  const fragmentShader = useMemo(
     () =>
       patchShaders(/* glsl */ `
-        // Passed from vertex shader
         varying vec2 custom_vUv;
         varying vec3 custom_vPosition;
         varying vec3 custom_vBoxUv;
@@ -122,27 +173,29 @@ export function DissolveMaterial({
 
   const groupRef = React.useRef<THREE.Mesh>(null!);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (!groupRef.current) return;
 
-    // copy position
     groupRef.current.position.copy(shipRef.current.position);
-
     uniforms.uMatrix.value.copy(groupRef.current.matrixWorld);
+
+    // Update time uniform
+    uniforms.uTime.value = clock.getElapsedTime();
   });
 
   return (
     <>
-      <CSM
-        key={vertexShader + fragmentShader}
-        baseMaterial={baseMaterial!}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
-        toneMapped={false}
-        transparent
-      />
-
+      <mesh ref={meshRef} receiveShadow>
+        <CSM
+          key={vertexShader + fragmentShader}
+          baseMaterial={baseMaterial!}
+          vertexShader={vertexShader}
+          fragmentShader={fragmentShader}
+          uniforms={uniforms}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
       <mesh ref={groupRef} scale={4} />
     </>
   );
