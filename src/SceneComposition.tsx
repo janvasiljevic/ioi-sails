@@ -1,4 +1,3 @@
-import { OrbitControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { useControls } from "leva";
@@ -10,6 +9,8 @@ import { DissolveMaterial } from "./materials/DissolveMaterial";
 import Bird from "./scene/Bird";
 import Ship from "./scene/Ship";
 import { RefLandmarks } from "./types";
+import { OrbitControls } from "@react-three/drei";
+import FollowLight from "./scene/FollowLight";
 
 type Props = {
   landmarksRef: RefLandmarks;
@@ -56,14 +57,10 @@ const SceneComposition = ({ landmarksRef }: Props) => {
 
       <FollowShip shipRef={shipRef}>
         <Hand3D handLandmarkArrayRef={landmarksRef} shipUpdateFn={shipUpdate} />
-        <directionalLight
-          position={[12, 1, 10]}
-          intensity={0.9}
-          castShadow
-          ref={directionalLightRef}
-        />
         <hemisphereLight intensity={Math.PI / 8} />
       </FollowShip>
+
+      <FollowLight shipRef={shipRef} />
 
       <DissolveMaterial
         baseMaterial={new THREE.MeshStandardMaterial({ color: waterColor })}

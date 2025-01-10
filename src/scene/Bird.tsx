@@ -13,6 +13,8 @@ type Props = {
   initialPhase?: number;
 };
 
+const targetPosition = new Vector3();
+
 function Bird({
   shipRef,
   baseRadius = 10,
@@ -52,12 +54,11 @@ function Bird({
     const tangentX = -Math.sin(angle) * baseRadius;
     const tangentZ = Math.cos(angle) * baseRadius;
 
-    const targetPosition = new Vector3(
+    targetPosition.set(
       birdRef.current.position.x + tangentX,
       birdRef.current.position.y,
       birdRef.current.position.z + tangentZ
     );
-
     birdRef.current.lookAt(targetPosition);
   });
 

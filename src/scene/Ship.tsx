@@ -1,8 +1,16 @@
 import { useFrame } from "@react-three/fiber";
 import { MutableRefObject, useRef } from "react";
 import ShipModel from "./models/ShipModel";
-
 import * as THREE from "three";
+
+function calculateWaveHeight(time: number, x: number, z: number) {
+  const distanceFromCenter = Math.sqrt(x * x + z * z) / 100;
+  const baseAmplitude = 0.5 * (1 - distanceFromCenter); // Amplitude decreases from center
+  const phase = x * 0.1 + z * 0.1;
+  const wave1 = Math.sin(time * 1.5 + phase) * baseAmplitude;
+  const wave2 = Math.sin(time * 2.3 + phase * 1.5) * baseAmplitude * 0.5;
+  return wave1 + wave2;
+}
 
 type Props = {
   angleRad: MutableRefObject<number | null>;
@@ -39,7 +47,7 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
     }
   };
 
-  const updatePosition = (delta: number) => {
+  const updatePosition = (delta: number, time: number) => {
     shipVelocity.current = shipVelocity.current * 0.99;
 
     const x = Math.sin(lastAngleRad.current) * shipVelocity.current * delta;
@@ -47,11 +55,17 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
 
     shipRef.current.position.x += x;
     shipRef.current.position.z += z;
+
+    shipRef.current.position.y = calculateWaveHeight(
+      time,
+      shipRef.current.position.x,
+      shipRef.current.position.z
+    );
   };
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     updateOrientation();
-    updatePosition(delta);
+    updatePosition(delta, clock.getElapsedTime());
   });
 
   return (
