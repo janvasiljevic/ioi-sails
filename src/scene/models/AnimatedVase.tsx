@@ -3,10 +3,10 @@ import { memo, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { SkeletonUtils } from "three-stdlib";
 
-useGLTF.preload("/seagull.glb");
+useGLTF.preload("/vase_animated.glb");
 
-const BirdModel = memo(function Bird() {
-  const { scene, animations } = useGLTF("/seagull.glb");
+const AnimatedVase = memo(function AnimatedVase() {
+  const { scene, animations } = useGLTF("/vase_animated.glb");
 
   // Clone the scene properly with SkeletonUtils
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
@@ -20,16 +20,21 @@ const BirdModel = memo(function Bird() {
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (child.material) {
-          child.material = new THREE.MeshBasicMaterial({ color: "black" });
+          // Add an emissive material to the vase
+          child.material = new THREE.MeshStandardMaterial({
+            color: "orange",
+            emissive: "orange",
+            emissiveIntensity: 2,
+          });
         }
       }
     });
 
-    const action = actions["ArmatureAction"];
+    const action = actions["SM_Vase 32Action"];
     if (action) {
       action.reset().play();
       action.setLoop(THREE.LoopRepeat, Infinity);
-      action.setEffectiveTimeScale(4);
+      action.setEffectiveTimeScale(1);
       action.clampWhenFinished = false;
     }
 
@@ -41,10 +46,10 @@ const BirdModel = memo(function Bird() {
   }, [actions, clone]);
 
   return (
-    <primitive object={clone}>
-      <meshBasicMaterial color="white" />
-    </primitive>
+    <mesh position={[0, 1, 0]}>
+      <primitive object={clone}></primitive>
+    </mesh>
   );
 });
 
-export default BirdModel;
+export default AnimatedVase;

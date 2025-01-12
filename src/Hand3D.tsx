@@ -130,7 +130,7 @@ const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
         const landmark = landmarks[i];
         const targetPosition = new THREE.Vector3(
           (landmark.x - 0.5) * -40,
-          3,
+          10,
           (landmark.y - 0.5) * 40
         );
 

@@ -22,7 +22,11 @@ function App() {
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1000 }}>
         <HandRecognition handLandmarkArrayRef={landmarksRef} />
       </div>
-      <Canvas camera={{ zoom: 3, position: [50, 50, 50] }} shadows>
+      <Canvas
+        camera={{ zoom: 3, position: [50, 50, 50] }}
+        shadows
+        gl={{ localClippingEnabled: true }}
+      >
         <Suspense fallback={<>Loading</>}>
           <SceneComposition landmarksRef={landmarksRef} />
         </Suspense>

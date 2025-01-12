@@ -57,23 +57,19 @@ export function DissolveMaterial({
   );
 
   useEffect(() => {
-    const geometry = new THREE.PlaneGeometry(500, 500, 150, 150);
+    const geometry = new THREE.PlaneGeometry(1000, 1000, 150, 150);
     geometry.rotateX(-Math.PI * 0.5);
 
     const amplitude = new Float32Array(geometry.attributes.position.count);
     const phase = new Float32Array(geometry.attributes.position.count);
 
-    // Get the position attribute for calculating based on position
     const positions = geometry.attributes.position.array;
 
     for (let i = 0; i < geometry.attributes.position.count; i++) {
-      // Use position-based values for more coherent waves
       const xPos = positions[i * 3];
       const zPos = positions[i * 3 + 2];
 
-      // Create amplitude based on distance from center
-      const distanceFromCenter = Math.sqrt(xPos * xPos + zPos * zPos) / 100;
-      amplitude[i] = 0.5 * (1 - distanceFromCenter); // Amplitude decreases from center
+      amplitude[i] = 0.5;
 
       // Create phase based on position for traveling waves
       phase[i] = xPos * 0.1 + zPos * 0.1; // Diagonal wave pattern
@@ -89,31 +85,33 @@ export function DissolveMaterial({
 
   const vertexShader = useMemo(
     () => /* glsl */ `
+      // out
       varying vec2 custom_vUv;
       varying vec3 custom_vPosition;
       varying vec3 custom_vBoxUv;
+      varying float vWaveHeight;
 
+      // uniforms
       uniform vec3 uBoxMin;
       uniform vec3 uBoxMax;
-
       uniform float uTime;
 
-      attribute float amplitude;  // Per-vertex amplitude
-      attribute float phase;     // Per-vertex phase
-
+      // per-vertex attributes
+      attribute float amplitude;  
+      attribute float phase;     
 
       void main() {
         custom_vUv = uv;
         custom_vPosition = position;
         
-        // Create multiple wave components for more interesting motion
         float wave1 = sin(uTime * 1.5 + phase) * amplitude;
         float wave2 = sin(uTime * 2.3 + phase * 1.5) * amplitude * 0.5;
         
-        // Combine waves
         csm_Position.y += wave1 + wave2;
         
         custom_vBoxUv = (position - uBoxMin) / (uBoxMax - uBoxMin);
+
+        vWaveHeight = csm_Position.y;
       }}
     `,
     []
@@ -125,6 +123,7 @@ export function DissolveMaterial({
         varying vec2 custom_vUv;
         varying vec3 custom_vPosition;
         varying vec3 custom_vBoxUv;
+        varying float vWaveHeight;
 
         uniform mat4 uMatrix;
         uniform float uFeather;
@@ -144,9 +143,9 @@ export function DissolveMaterial({
 
 
         void main() {
-            // Simplex noise 
-            // Seed, persistance, lacunarity, scale, redistribution, octaves, terbulence, ridge
-          gln_tFBMOpts opts = gln_tFBMOpts(1.0, 0.3, 2.0, 1.0, 1.0, 5, false, false);
+          // Simplex noise 
+          // Seed, persistance, lacunarity, scale, redistribution, octaves, terbulence, ridge
+          gln_tFBMOpts opts = gln_tFBMOpts(1.0, 0.3, 2.0, 1.0, 1.0, 3, false, false);
           float noise = gln_sfbm(custom_vPosition, opts);
           noise = gln_normalize(noise);
 
@@ -155,17 +154,27 @@ export function DissolveMaterial({
 
           float progress = distance;
 
-          // float alpha = step(1.0 - progress, noise);
           float alpha = 1.0 - step(1.0 - progress, noise);
-          // clip alpha to 0.1
-          // alpha = max(alpha, 0.1);
+  
 
-          // float border = step((1.0 - progress) - uThickness, noise) - alpha;
           float border = 1.0 - (step((1.0 - progress) - uThickness, noise) - alpha);
 
+
+          float normalizedHeight = smoothstep(-1.0, 1.0, vWaveHeight);
+
+          // Compute a color gradient based on wave height
+          vec3 lowColor = vec3(0.7, 0.7, 0.8); 
+          vec3 highColor = vec3(1.0, 1.0, 1.0);
+          vec3 gradientColor = mix(lowColor, highColor, normalizedHeight);
+
+          vec4 originalColor = csm_DiffuseColor;
+
+          vec3 modifiedColor = originalColor.rgb * gradientColor;
+
+          csm_DiffuseColor = vec4(modifiedColor, originalColor.a);
+
+
           csm_DiffuseColor.a = alpha + border;
-          // csm_DiffuseColor.rgb = mix(csm_DiffuseColor.rgb, uColor, border);
-          // csm_DiffuseColor.rgb = mix(uColor, csm_DiffuseColor.rgb, border);
         }
       `) as string,
     []
@@ -196,7 +205,7 @@ export function DissolveMaterial({
           transparent
         />
       </mesh>
-      <mesh ref={groupRef} scale={4} />
+      <mesh ref={groupRef} scale={5} />
     </>
   );
 }

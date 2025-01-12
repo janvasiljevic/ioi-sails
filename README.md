@@ -1,5 +1,7 @@
 # React + TypeScript + Vite
 
+https://www.blendswap.com/blend/28707
+
     <Canvas shadows camera={{ position: [0, 25, 25] }}>
           {/* fog je nice, sam sele ko mas staticno kamero */}
           {/* <fog attach="fog" args={["black", 15, 21.5]} /> */}

@@ -2,10 +2,15 @@ import { useFrame } from "@react-three/fiber";
 import { MutableRefObject, useRef } from "react";
 import ShipModel from "./models/ShipModel";
 import * as THREE from "three";
+import {
+  CuboidCollider,
+  RapierRigidBody,
+  RigidBody,
+} from "@react-three/rapier";
 
 function calculateWaveHeight(time: number, x: number, z: number) {
-  const distanceFromCenter = Math.sqrt(x * x + z * z) / 100;
-  const baseAmplitude = 0.5 * (1 - distanceFromCenter); // Amplitude decreases from center
+  time -= 0.1;
+  const baseAmplitude = 0.5;
   const phase = x * 0.1 + z * 0.1;
   const wave1 = Math.sin(time * 1.5 + phase) * baseAmplitude;
   const wave2 = Math.sin(time * 2.3 + phase * 1.5) * baseAmplitude * 0.5;
@@ -45,6 +50,14 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
         0.05 * angularVelocity.current
       );
     }
+
+    if (rigidBodyRef.current)
+      rigidBodyRef.current.setNextKinematicRotation({
+        x: shipRef.current.quaternion.x,
+        y: shipRef.current.quaternion.y,
+        z: shipRef.current.quaternion.z,
+        w: shipRef.current.quaternion.w,
+      });
   };
 
   const updatePosition = (delta: number, time: number) => {
@@ -61,7 +74,16 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
       shipRef.current.position.x,
       shipRef.current.position.z
     );
+
+    if (rigidBodyRef.current)
+      rigidBodyRef.current.setNextKinematicTranslation({
+        x: shipRef.current.position.x,
+        y: shipRef.current.position.y,
+        z: shipRef.current.position.z,
+      });
   };
+
+  const rigidBodyRef = useRef<RapierRigidBody>(null);
 
   useFrame(({ clock }, delta) => {
     updateOrientation();
@@ -69,9 +91,21 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
   });
 
   return (
-    <mesh ref={shipRef} position={[0, 0.5, 0]} castShadow receiveShadow>
-      <ShipModel />
-    </mesh>
+    <>
+      <mesh ref={shipRef} position={[0, 0.5, 0]} castShadow receiveShadow>
+        <ShipModel />
+      </mesh>
+
+      <RigidBody ref={rigidBodyRef} type="kinematicPosition">
+        <CuboidCollider
+          args={[0.8, 0.8, 2]}
+          sensor
+          onIntersectionEnter={({ other }) => {
+            console.log(other.rigidBody?.userData);
+          }}
+        />
+      </RigidBody>
+    </>
   );
 };
 

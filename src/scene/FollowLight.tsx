@@ -1,35 +1,39 @@
 import { useFrame } from "@react-three/fiber";
 import React, { MutableRefObject } from "react";
-import { DirectionalLight, Mesh, Vector3 } from "three";
+import { Mesh, PointLight, Vector3 } from "three";
 
 type Props = {
   shipRef: MutableRefObject<Mesh | null>;
 };
 
-const offset = new Vector3(12, 1, 10);
-
-const distance = 20;
+const offset = new Vector3(-10, 10, 10);
 
 function FollowLight({ shipRef }: Props) {
-  const lightRef = React.useRef<DirectionalLight>(null!);
+  const lightRef = React.useRef<PointLight>(null!);
 
   useFrame(() => {
     if (!shipRef.current) return;
 
     lightRef.current.position.set(
       shipRef.current.position.x + offset.x,
-      shipRef.current.position.y + offset.y,
+      offset.y,
       shipRef.current.position.z + offset.z
     );
   });
 
   return (
-    <directionalLight ref={lightRef} castShadow>
-      <orthographicCamera
-        attach="shadow-camera"
-        args={[-distance, distance, distance, -distance]}
-      />
-    </directionalLight>
+    <pointLight
+      ref={lightRef}
+      castShadow
+      intensity={4.5}
+      color="orange"
+      decay={0.8}
+    >
+      {/* <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshBasicMaterial color="red" wireframe />
+      </mesh> */}
+    </pointLight>
   );
 }
 
