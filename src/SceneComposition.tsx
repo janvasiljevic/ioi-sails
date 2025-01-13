@@ -14,6 +14,7 @@ import AnimatedVase from "./scene/models/AnimatedVase";
 import Ship from "./scene/Ship";
 import { useDistanceStore, useGameStore } from "./store";
 import { RefLandmarks } from "./types";
+import ClippingPlaneHelpers from "./scene/ClippingPlanesHelper";
 
 type Props = {
   landmarksRef: RefLandmarks;
@@ -27,18 +28,25 @@ const SceneComposition = ({ landmarksRef }: Props) => {
   const { gameState } = useGameStore();
   const { position } = useDistanceStore();
 
-  const { showPerf, bgColor, useOrbitControls, showDebugPhysics, shipSpeed } =
-    useControls({
-      showPerf: false,
-      bgColor: "#241f2b",
-      useOrbitControls: false,
-      showDebugPhysics: false,
-      shipSpeed: {
-        value: 1,
-        min: 0.5,
-        max: 5,
-      },
-    });
+  const {
+    showPerf,
+    bgColor,
+    useOrbitControls,
+    showDebugPhysics,
+    shipSpeed,
+    showPlanes,
+  } = useControls({
+    showPlanes: false,
+    showPerf: false,
+    bgColor: "#241f2b",
+    useOrbitControls: false,
+    showDebugPhysics: false,
+    shipSpeed: {
+      value: 1,
+      min: 0.5,
+      max: 5,
+    },
+  });
 
   const shipUpdate = (
     x: number | null,
@@ -161,6 +169,7 @@ const SceneComposition = ({ landmarksRef }: Props) => {
         </RigidBody>
 
         {planes && <AnimatedVase clippingPlanes={planes} />}
+        {showPlanes && <ClippingPlaneHelpers planes={planes} />}
 
         <Ship
           angleRad={shipOrientationRef}

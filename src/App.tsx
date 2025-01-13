@@ -35,7 +35,7 @@ function App() {
       className="bg"
     >
       {/* <Leva flat neverHide /> */}
-      <Leva flat hidden />
+      <Leva flat hidden={import.meta.env.PROD} />
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1000 }}>
         <HandRecognition
           handLandmarkArrayRef={landmarksRef}
