@@ -8,10 +8,8 @@ useGLTF.preload("/seagull.glb");
 const BirdModel = memo(function Bird() {
   const { scene, animations } = useGLTF("/seagull.glb");
 
-  // Clone the scene properly with SkeletonUtils
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
-  // Get animations for the cloned scene
   const { actions } = useAnimations(animations, clone);
 
   useEffect(() => {

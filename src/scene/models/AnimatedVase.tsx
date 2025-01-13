@@ -52,10 +52,8 @@ const AnimatedVase = memo(function AnimatedVase({ clippingPlanes }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [randomPosition]);
 
-  // Clone the scene properly with SkeletonUtils
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
-  // Get animations for the cloned scene
   const { actions } = useAnimations(animations, clone);
 
   useEffect(() => {

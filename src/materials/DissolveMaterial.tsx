@@ -71,8 +71,7 @@ export function DissolveMaterial({
 
       amplitude[i] = 0.5;
 
-      // Create phase based on position for traveling waves
-      phase[i] = xPos * 0.1 + zPos * 0.1; // Diagonal wave pattern
+      phase[i] = xPos * 0.1 + zPos * 0.1;
     }
 
     geometry.setAttribute("amplitude", new THREE.BufferAttribute(amplitude, 1));
@@ -162,7 +161,6 @@ export function DissolveMaterial({
 
           float normalizedHeight = smoothstep(-1.0, 1.0, vWaveHeight);
 
-          // Compute a color gradient based on wave height
           vec3 lowColor = vec3(0.7, 0.7, 0.8); 
           vec3 highColor = vec3(1.0, 1.0, 1.0);
           vec3 gradientColor = mix(lowColor, highColor, normalizedHeight);
@@ -188,7 +186,6 @@ export function DissolveMaterial({
     groupRef.current.position.copy(shipRef.current.position);
     uniforms.uMatrix.value.copy(groupRef.current.matrixWorld);
 
-    // Update time uniform
     uniforms.uTime.value = clock.getElapsedTime();
   });
 

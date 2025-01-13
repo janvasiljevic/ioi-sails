@@ -88,7 +88,6 @@ const HandRecognition = ({
           performance.now()
         );
 
-        // Assuming detections.landmarks is an array of landmark objects
         if (detections.landmarks) {
           if (showCanvas) {
             drawLandmarks(detections.landmarks);

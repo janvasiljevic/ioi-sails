@@ -5,14 +5,13 @@ import * as THREE from "three";
 
 type VaseViewProps = {
   textureBase64: string;
-  rotationSpeed?: number; // Rotations per second
+  rotationSpeed?: number;
 };
 function RotatingVase({ textureBase64, rotationSpeed = 0.1 }: VaseViewProps) {
   const { nodes } = useGLTF("/vase.glb");
   const meshRef = useRef<THREE.Mesh>(null);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
-  // Load the texture from base64
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     loader.load(textureBase64, (loadedTexture) => {
@@ -20,14 +19,12 @@ function RotatingVase({ textureBase64, rotationSpeed = 0.1 }: VaseViewProps) {
     });
   }, [textureBase64]);
 
-  // Rotate the vase
   useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * Math.PI * 2 * rotationSpeed;
     }
   });
 
-  // Get the first mesh from the loaded model
   const firstMesh = Object.values(nodes).find(
     (node): node is THREE.Mesh => node instanceof THREE.Mesh
   );

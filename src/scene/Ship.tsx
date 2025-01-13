@@ -25,8 +25,8 @@ type Props = {
 };
 
 const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
-  const targetQuaternion = useRef(new THREE.Quaternion()); // Store target quaternion
-  const currentQuaternion = useRef(new THREE.Quaternion()); // Store current quaternion
+  const targetQuaternion = useRef(new THREE.Quaternion());
+  const currentQuaternion = useRef(new THREE.Quaternion());
   const lastAngleRad = useRef<number>(angleRad.current ?? 0);
   const angularVelocity = useRef(1);
   const rotationEuler = useRef(new THREE.Euler(0, 0, 0));

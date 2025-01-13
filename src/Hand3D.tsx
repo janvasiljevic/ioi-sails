@@ -53,7 +53,6 @@ const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
   const [isPointing, setIsPointing] = useState<boolean>(false);
 
   useEffect(() => {
-    // Initialize previous positions and velocities with zero vectors
     previousPositionsRef.current = Array.from(
       { length: 21 },
       () => new THREE.Vector3(0, 0, 0)
@@ -90,16 +89,12 @@ const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
           (landmark.y - 0.5) * 40
         );
 
-        // Calculate new velocity
-        velocity.copy(targetPosition).sub(previousPosition).multiplyScalar(0.1); // Adjust factor for smoother velocity
+        velocity.copy(targetPosition).sub(previousPosition).multiplyScalar(0.1);
 
-        // Lerp the current position to the target position
-        sphere.position.lerp(targetPosition, 0.1); // Adjust the factor (0.1) for smoothing
+        sphere.position.lerp(targetPosition, 0.1);
 
-        // Update the previous position
         previousPosition.copy(sphere.position);
       } else {
-        // Apply the velocity to continue moving in the last known direction
         sphere.position.add(velocity);
       }
     }

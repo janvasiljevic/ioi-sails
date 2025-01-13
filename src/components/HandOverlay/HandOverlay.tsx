@@ -18,17 +18,15 @@ export function HandOverlay({ handLandmarkArrayRef, handednessRef }: Props) {
     currentColorRef.current = currentColor;
   }, [currentColor]);
 
-  // Function to draw a single hand
   const drawHand = (
     ctx: CanvasRenderingContext2D,
     landmarks: NormalizedLandmark[],
     color: string
   ) => {
-    // Draw joints
     landmarks.forEach((landmark) => {
       ctx.beginPath();
       ctx.arc(
-        (1 - landmark.x) * ctx.canvas.width, // Flip X coordinate
+        (1 - landmark.x) * ctx.canvas.width,
         landmark.y * ctx.canvas.height,
         3,
         0,
@@ -38,7 +36,6 @@ export function HandOverlay({ handLandmarkArrayRef, handednessRef }: Props) {
       ctx.fill();
     });
 
-    // Draw connections
     const connections = [
       [0, 1],
       [1, 2],
@@ -89,11 +86,9 @@ export function HandOverlay({ handLandmarkArrayRef, handednessRef }: Props) {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Clear the canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (handLandmarkArrayRef.current && handednessRef.current) {
-        // Map hands to their handedness
         const handsWithHandedness = handLandmarkArrayRef.current.map(
           (landmarks, index) => ({
             landmarks,
@@ -101,7 +96,6 @@ export function HandOverlay({ handLandmarkArrayRef, handednessRef }: Props) {
           })
         );
 
-        // Find hands by their actual handedness
         handsWithHandedness.forEach((hand) => {
           if (hand.handedness[0].categoryName === "Left") {
             drawHand(ctx, hand.landmarks, "gray"); // Left hand in gray

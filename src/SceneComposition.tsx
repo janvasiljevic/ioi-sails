@@ -70,15 +70,13 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     waterColor: "#9badb7",
   });
 
-  const radius = 13; // Your desired radius
-  const segments = 16; // Number of planes to approximate the circle
+  const radius = 13;
+  const segments = 16;
 
-  // Create planes arranged in a circle
   const planes = useMemo(() => {
     const planeArray = [];
     for (let i = 0; i < segments; i++) {
       const angle = (i / segments) * Math.PI * 2;
-      // Create normal vector pointing inward
       const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
       planeArray.push(new THREE.Plane(normal, radius));
     }
@@ -91,7 +89,6 @@ const SceneComposition = ({ landmarksRef }: Props) => {
 
       position.set(shipPosition.x, shipPosition.y, shipPosition.z);
 
-      // Update each plane's constant to maintain circle around ship
       planes.forEach((plane, i) => {
         const angle = (i / segments) * Math.PI * 2;
         const pointOnCircle = new THREE.Vector3(
@@ -99,7 +96,6 @@ const SceneComposition = ({ landmarksRef }: Props) => {
           0,
           Math.sin(angle) * radius - shipPosition.z
         );
-        // Update plane constant to pass through point on circle
         plane.constant = plane.normal.dot(pointOnCircle);
       });
 

@@ -87,7 +87,7 @@ function PaintableVase({
     context.stroke();
 
     context.beginPath();
-    context.fillStyle = currentColor; // Match fill color to stroke color
+    context.fillStyle = currentColor;
     context.arc(x, y, context.lineWidth / 2, 0, Math.PI * 2);
     context.fill();
   };
@@ -107,7 +107,6 @@ function PaintableVase({
       })
     );
 
-    // Find right hand for painting
     const rightHand = handsWithHandedness.find(
       (hand) => hand.handedness === "Right"
     )?.landmarks;
@@ -147,7 +146,6 @@ function PaintableVase({
               const currentX = uv.x * canvas.width;
               const currentY = (1 - uv.y) * canvas.height;
 
-              // Use currentColor instead of "black"
               context.strokeStyle = currentColor;
 
               if (lastPointRef.current) {
@@ -176,7 +174,6 @@ function PaintableVase({
       lastPointRef.current = null;
     }
 
-    // Find left hand for rotation
     const leftHand = handsWithHandedness.find(
       (hand) => hand.handedness === "Left"
     )?.landmarks;
@@ -185,16 +182,13 @@ function PaintableVase({
       const leftPalm = leftHand[0];
 
       if (lastLeftHandXRef.current !== null) {
-        // Calculate the change in x position
         const deltaX = leftPalm.x - lastLeftHandXRef.current;
-        // Convert delta to rotation (adjust multiplier to control rotation speed)
         const rotationDelta = -deltaX * Math.PI * 2;
         setRotationY((prev) => prev + rotationDelta);
       }
 
       lastLeftHandXRef.current = leftPalm.x;
     } else {
-      // Reset the reference when hand is closed or not visible
       lastLeftHandXRef.current = null;
     }
   });
@@ -305,5 +299,4 @@ export default function PaintableVaseScene() {
   );
 }
 
-// Preload the model
 useGLTF.preload("/vase.glb");

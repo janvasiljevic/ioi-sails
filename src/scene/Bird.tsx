@@ -24,7 +24,7 @@ function Bird({
   initialPhase = 0,
 }: Props) {
   const birdRef = useRef<THREE.Mesh>(null!);
-  const timeRef = useRef(initialPhase); // Start with initial phase
+  const timeRef = useRef(initialPhase);
 
   const lookedPosition = new Vector3();
 

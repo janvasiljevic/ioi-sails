@@ -23,7 +23,7 @@ export const isHandOpen = (landmarks: NormalizedLandmark[]): boolean => {
     const angles = vectors
       .slice(1)
       .map((v, i) => calculateAngle(vectors[i], v));
-    const angleThreshold = Math.PI / 4; // More lenient threshold for open hand
+    const angleThreshold = Math.PI / 4;
 
     return angles.every((angle) => angle < angleThreshold);
   });
@@ -45,7 +45,7 @@ export const isIndexFingerPointing = (
   });
 
   const angles = vectors.slice(1).map((v, i) => calculateAngle(vectors[i], v));
-  const angleThreshold = Math.PI / 8; // Adjust the threshold as needed
+  const angleThreshold = Math.PI / 8;
 
   return angles.every((angle) => angle < angleThreshold);
 };
