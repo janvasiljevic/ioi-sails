@@ -63,7 +63,7 @@ function App() {
         shadows
         gl={{ localClippingEnabled: true }}
       >
-        <Suspense fallback={<>Loading</>}>
+        <Suspense fallback={null}>
           <SceneComposition landmarksRef={landmarksRef} />
         </Suspense>
       </Canvas>
