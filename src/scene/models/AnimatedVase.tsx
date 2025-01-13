@@ -1,12 +1,56 @@
 import { useAnimations, useGLTF } from "@react-three/drei";
+import { CylinderCollider, RigidBody } from "@react-three/rapier";
+import { useControls } from "leva";
 import { memo, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { SkeletonUtils } from "three-stdlib";
+import { useDistanceStore } from "../../store";
 
 useGLTF.preload("/vase_animated.glb");
+useGLTF.preload("/points.glb");
 
-const AnimatedVase = memo(function AnimatedVase() {
+type Props = {
+  clippingPlanes: THREE.Plane[];
+};
+
+const AnimatedVase = memo(function AnimatedVase({ clippingPlanes }: Props) {
   const { scene, animations } = useGLTF("/vase_animated.glb");
+  const points = useGLTF("/points.glb");
+
+  const { targetPosition } = useDistanceStore();
+
+  const { easyMode } = useControls({
+    easyMode: false,
+  });
+
+  const spawnPoints = useMemo(() => {
+    const positions: THREE.Vector3[] = [];
+    points.scene.traverse((child) => {
+      // A B C...
+      if (child.name.match(/^[A-Z]$/)) {
+        positions.push(child.position);
+      }
+    });
+    return positions;
+  }, [points]);
+
+  const randomPosition = useMemo(() => {
+    if (easyMode) {
+      return new THREE.Vector3(0, 0, 0);
+    }
+
+    const randomIndex = Math.floor(Math.random() * spawnPoints.length);
+    return spawnPoints[randomIndex];
+  }, [spawnPoints, easyMode]);
+
+  useEffect(() => {
+    targetPosition.set(
+      randomPosition.x,
+      randomPosition.y + 1,
+      randomPosition.z
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [randomPosition]);
 
   // Clone the scene properly with SkeletonUtils
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
@@ -20,11 +64,11 @@ const AnimatedVase = memo(function AnimatedVase() {
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (child.material) {
-          // Add an emissive material to the vase
           child.material = new THREE.MeshStandardMaterial({
             color: "orange",
             emissive: "orange",
             emissiveIntensity: 2,
+            clippingPlanes,
           });
         }
       }
@@ -43,11 +87,20 @@ const AnimatedVase = memo(function AnimatedVase() {
         action.stop();
       }
     };
-  }, [actions, clone]);
+  }, [actions, clippingPlanes, clone]);
 
   return (
-    <mesh position={[0, 1, 0]}>
-      <primitive object={clone}></primitive>
+    <mesh position={[randomPosition.x, randomPosition.y + 1, randomPosition.z]}>
+      <primitive object={clone} />
+
+      <RigidBody
+        type="dynamic"
+        lockRotations
+        lockTranslations
+        userData={{ type: "reward" }}
+      >
+        <CylinderCollider args={[4, 2]} />
+      </RigidBody>
     </mesh>
   );
 });

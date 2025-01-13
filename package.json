@@ -10,11 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@mediapipe/tasks-vision": "^0.10.18",
     "@react-three/drei": "^9.119.0",
     "@react-three/fiber": "^8.17.10",
     "@react-three/postprocessing": "^2.16.3",
     "@react-three/rapier": "^1.5.0",
+    "@supabase/supabase-js": "^2.47.12",
+    "@tabler/icons-react": "2.14.0",
     "@types/three": "^0.170.0",
     "gl-noise": "^1.6.1",
     "leva": "^0.9.35",
@@ -22,7 +27,8 @@
     "react-dom": "^18.3.1",
     "three": "^0.170.0",
     "three-custom-shader-material": "^6.2.0",
-    "three.quarks": "^0.15.5"
+    "three.quarks": "^0.15.5",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

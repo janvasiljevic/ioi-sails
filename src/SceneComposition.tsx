@@ -1,6 +1,7 @@
 import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
+import { Physics, RigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
 import { Perf } from "r3f-perf";
 import React, { Suspense, useEffect, useMemo, useRef } from "react";
@@ -9,10 +10,10 @@ import Hand3D from "./Hand3D";
 import { DissolveMaterial } from "./materials/DissolveMaterial";
 import Bird from "./scene/Bird";
 import FollowLight from "./scene/FollowLight";
-import Ship from "./scene/Ship";
-import { RefLandmarks } from "./types";
-import { Physics, RigidBody } from "@react-three/rapier";
 import AnimatedVase from "./scene/models/AnimatedVase";
+import Ship from "./scene/Ship";
+import { useDistanceStore, useGameStore } from "./store";
+import { RefLandmarks } from "./types";
 
 type Props = {
   landmarksRef: RefLandmarks;
@@ -23,13 +24,20 @@ const SceneComposition = ({ landmarksRef }: Props) => {
   const shipVelocityRef = useRef<number>(0);
   const shipRef = useRef<THREE.Mesh>(null!);
 
+  const { gameState } = useGameStore();
+  const { position } = useDistanceStore();
+
   const { showPerf, bgColor, useOrbitControls, showDebugPhysics, shipSpeed } =
     useControls({
       showPerf: false,
       bgColor: "#241f2b",
       useOrbitControls: false,
-      showDebugPhysics: true,
-      shipSpeed: 1,
+      showDebugPhysics: false,
+      shipSpeed: {
+        value: 1,
+        min: 0.5,
+        max: 5,
+      },
     });
 
   const shipUpdate = (
@@ -37,6 +45,8 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     y: number | null,
     velocity: number | null
   ) => {
+    if (gameState !== "normal") return;
+
     if (!x || !y || !velocity) {
       shipOrientationRef.current = null;
       return;
@@ -71,6 +81,8 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     if (shipRef.current && materialRef.current) {
       const shipPosition = shipRef.current.position;
 
+      position.set(shipPosition.x, shipPosition.y, shipPosition.z);
+
       // Update each plane's constant to maintain circle around ship
       planes.forEach((plane, i) => {
         const angle = (i / segments) * Math.PI * 2;
@@ -84,7 +96,6 @@ const SceneComposition = ({ landmarksRef }: Props) => {
       });
 
       materialRef.current.clippingPlanes = planes;
-      materialRef.current.needsUpdate = true;
     }
   });
 
@@ -101,6 +112,7 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     const targetMesh = scene.getObjectByName("Plane");
     if (targetMesh && targetMesh instanceof THREE.Mesh) {
       targetMesh.material = materialRef.current;
+      targetMesh.castShadow = true;
     }
   }, [scene]);
 
@@ -113,10 +125,12 @@ const SceneComposition = ({ landmarksRef }: Props) => {
 
       <Physics debug={showDebugPhysics}>
         <FollowShip shipRef={shipRef} orbit={useOrbitControls}>
-          <Hand3D
-            handLandmarkArrayRef={landmarksRef}
-            shipUpdateFn={shipUpdate}
-          />
+          {gameState === "normal" && (
+            <Hand3D
+              handLandmarkArrayRef={landmarksRef}
+              shipUpdateFn={shipUpdate}
+            />
+          )}
           <hemisphereLight intensity={Math.PI / 5} />
         </FollowShip>
 
@@ -146,7 +160,7 @@ const SceneComposition = ({ landmarksRef }: Props) => {
           <primitive object={scene} />
         </RigidBody>
 
-        <AnimatedVase />
+        {planes && <AnimatedVase clippingPlanes={planes} />}
 
         <Ship
           angleRad={shipOrientationRef}

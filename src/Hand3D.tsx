@@ -1,8 +1,11 @@
-import { Landmark } from "@mediapipe/tasks-vision";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { RefLandmarks } from "./types";
+import {
+  calculateIndexFingerOrientation,
+  isIndexFingerPointing,
+} from "./utilts";
 
 type HandProps = {
   handLandmarkArrayRef: RefLandmarks;
@@ -36,55 +39,6 @@ const connections = [
   [19, 20], // Pinky
   [0, 17], // Palm base
 ];
-
-const calculateIndexFingerOrientation = (
-  landmarks: Landmark[]
-): { x: number; y: number } => {
-  const baseIndex = 5;
-  const tipIndex = 8;
-
-  const base = new THREE.Vector3(
-    landmarks[baseIndex].x,
-    landmarks[baseIndex].y,
-    0
-  );
-  const tip = new THREE.Vector3(
-    landmarks[tipIndex].x,
-    landmarks[tipIndex].y,
-    0
-  );
-
-  const direction = new THREE.Vector3().subVectors(tip, base).normalize();
-
-  return { x: direction.x, y: direction.y };
-};
-
-const calculateVector = (start: THREE.Vector3, end: THREE.Vector3) => {
-  return new THREE.Vector3().subVectors(end, start).normalize();
-};
-
-const calculateAngle = (v1: THREE.Vector3, v2: THREE.Vector3) => {
-  return v1.angleTo(v2);
-};
-
-const isIndexFingerPointing = (landmarks: Landmark[]): boolean => {
-  const indices = [5, 6, 7, 8];
-
-  const vectors = indices.slice(1).map((idx, i) => {
-    const start = new THREE.Vector3(
-      landmarks[indices[i]].x,
-      landmarks[indices[i]].y,
-      0
-    );
-    const end = new THREE.Vector3(landmarks[idx].x, landmarks[idx].y, 0);
-    return calculateVector(start, end);
-  });
-
-  const angles = vectors.slice(1).map((v, i) => calculateAngle(vectors[i], v));
-  const angleThreshold = Math.PI / 8; // Adjust the threshold as needed
-
-  return angles.every((angle) => angle < angleThreshold);
-};
 
 const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
   const sphereRefs = useRef<THREE.Mesh[]>([]);
@@ -128,6 +82,8 @@ const Hand3D = ({ handLandmarkArrayRef, shipUpdateFn }: HandProps) => {
 
       if (landmarks && landmarks[i]) {
         const landmark = landmarks[i];
+        if (!landmark) continue;
+
         const targetPosition = new THREE.Vector3(
           (landmark.x - 0.5) * -40,
           10,

@@ -1,9 +1,10 @@
 import {
+  Category,
   FilesetResolver,
   HandLandmarker,
   NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
-import { useEffect, useRef } from "react";
+import { MutableRefObject, useEffect, useRef } from "react";
 // @ts-expect-error - no types available
 import hand_landmarker_task from "./assets/hand_landmarker.task";
 import { RefLandmarks } from "../types";
@@ -11,9 +12,15 @@ import { useControls } from "leva";
 
 type Props = {
   handLandmarkArrayRef: RefLandmarks;
+  handednessRef: MutableRefObject<Category[][] | null>;
+  numberOfHands?: number;
 };
 
-const HandRecognition = ({ handLandmarkArrayRef }: Props) => {
+const HandRecognition = ({
+  handLandmarkArrayRef,
+  handednessRef,
+  numberOfHands = 1,
+}: Props) => {
   const { showVideo, showCanvas } = useControls({
     showVideo: false,
     showCanvas: false,
@@ -36,7 +43,7 @@ const HandRecognition = ({ handLandmarkArrayRef }: Props) => {
             modelAssetPath: hand_landmarker_task,
             delegate: "GPU",
           },
-          numHands: 1,
+          numHands: numberOfHands,
           runningMode: "VIDEO",
           minTrackingConfidence: 0.5,
           minHandPresenceConfidence: 0.5,
@@ -88,8 +95,10 @@ const HandRecognition = ({ handLandmarkArrayRef }: Props) => {
           }
 
           handLandmarkArrayRef.current = detections.landmarks;
+          handednessRef.current = detections.handedness;
         } else {
           handLandmarkArrayRef.current = null;
+          handednessRef.current = null;
         }
       }
       animationFrameId = requestAnimationFrame(detectHands);

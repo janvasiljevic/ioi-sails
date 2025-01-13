@@ -7,6 +7,7 @@ import {
   RapierRigidBody,
   RigidBody,
 } from "@react-three/rapier";
+import { useGameStore } from "../store";
 
 function calculateWaveHeight(time: number, x: number, z: number) {
   time -= 0.1;
@@ -30,6 +31,8 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
   const angularVelocity = useRef(1);
   const rotationEuler = useRef(new THREE.Euler(0, 0, 0));
 
+  const { setGameState } = useGameStore();
+
   const updateOrientation = () => {
     if (angleRad.current !== null) {
       rotationEuler.current.set(0, angleRad.current, 0);
@@ -37,7 +40,7 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
 
       currentQuaternion.current.copy(shipRef.current.quaternion);
 
-      currentQuaternion.current.slerp(targetQuaternion.current, 0.05);
+      currentQuaternion.current.slerp(targetQuaternion.current, 0.01);
       shipRef.current.quaternion.copy(currentQuaternion.current);
 
       angularVelocity.current = 1;
@@ -98,10 +101,18 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
 
       <RigidBody ref={rigidBodyRef} type="kinematicPosition">
         <CuboidCollider
-          args={[0.8, 0.8, 2]}
+          args={[0.6, 0.2, 1.5]}
           sensor
           onIntersectionEnter={({ other }) => {
-            console.log(other.rigidBody?.userData);
+            const data: {
+              [key: string]: string;
+            } = other.rigidBody?.userData as {
+              [key: string]: string;
+            };
+
+            if (data.type === "land") setGameState("gameOver");
+            else if (data.type === "reward") setGameState("gameWon");
+            else throw new Error("Unknown collision type");
           }}
         />
       </RigidBody>
