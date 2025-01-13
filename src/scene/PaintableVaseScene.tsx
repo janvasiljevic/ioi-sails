@@ -22,6 +22,7 @@ import { isHandOpen, isIndexFingerPointing } from "../utilts";
 import { supabase } from "../supa-client";
 import EditorOverlay from "../components/EditorOverlay/EditorOverlay";
 import styles from "./../components/common/common.module.css";
+import { Leva } from "leva";
 
 type Props = {
   handLandmarkArrayRef: MutableRefObject<NormalizedLandmark[][] | null>;
@@ -266,6 +267,8 @@ export default function PaintableVaseScene() {
           </p>
         </div>
       )}
+
+      <Leva hidden />
 
       <EditorOverlay create={submit} />
       <Canvas shadows>

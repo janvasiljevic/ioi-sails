@@ -34,7 +34,8 @@ function App() {
       style={{ position: "relative", width: "100%", height: "100vh" }}
       className="bg"
     >
-      <Leva flat neverHide />
+      {/* <Leva flat neverHide /> */}
+      <Leva flat hidden />
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1000 }}>
         <HandRecognition
           handLandmarkArrayRef={landmarksRef}

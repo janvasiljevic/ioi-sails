@@ -20,8 +20,7 @@ const EditorOverlay = ({ create }: Props) => {
         <div className={editorStyles.instruction}>
           <IconHandStop />
           <p>
-            To rotate the <b>camera</b> hold the <b>left hand</b> in a fist and
-            drag.
+            To rotate the <b>camera</b> hold the <b>left hand</b> open and drag.
           </p>
         </div>
         <div className={editorStyles.instruction}>
