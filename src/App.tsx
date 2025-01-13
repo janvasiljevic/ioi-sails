@@ -25,18 +25,6 @@ function App() {
 
   const { gameState } = useGameStore();
 
-  const { targetPosition, position } = useDistanceStore();
-
-  const [distance, setDistance] = useState(100);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDistance(position.distanceTo(targetPosition));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [position, targetPosition]);
-
   if (gameState === "editor") {
     return <PaintableVaseScene />;
   }
@@ -67,11 +55,29 @@ function App() {
           <SceneComposition landmarksRef={landmarksRef} />
         </Suspense>
       </Canvas>
-      <div className={styles.counter}>
-        <p>{distance.toFixed(2)}m</p>
-      </div>
+      <Counter />
     </div>
   );
 }
+
+const Counter = () => {
+  const { targetPosition, position } = useDistanceStore();
+
+  const [distance, setDistance] = useState(100);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDistance(position.distanceTo(targetPosition));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [position, targetPosition]);
+
+  return (
+    <div className={styles.counter}>
+      <p>{distance.toFixed(2)}m</p>
+    </div>
+  );
+};
 
 export default App;
