@@ -11,6 +11,9 @@ import PaintableVaseScene from "./scene/PaintableVaseScene";
 import SceneComposition from "./SceneComposition";
 import { useDistanceStore, useGameStore } from "./store";
 
+import useSound from "use-sound";
+import boopSfx from "./sfx/waves.mp3";
+
 import styles from "./components/common/common.module.css";
 import StartScreen from "./components/StartScreen/StartScreen";
 
@@ -23,7 +26,15 @@ function App() {
   const landmarksRef = useRef<NormalizedLandmark[][] | null>([]);
   const handednessRef = useRef<Category[][] | null>(null);
 
+  const [play] = useSound(boopSfx);
+
   const { gameState } = useGameStore();
+
+  useEffect(() => {
+    if (gameState === "normal") {
+      play();
+    }
+  }, [gameState, play]);
 
   if (gameState === "editor") {
     return <PaintableVaseScene />;
@@ -43,12 +54,12 @@ function App() {
         />
       </div>
 
-      {gameState === "start" && <StartScreen />}
+      {gameState === "start" && <StartScreen landmarks={landmarksRef} />}
       {gameState === "gameOver" && <GameOverScreen />}
       {gameState === "gameWon" && <GameWonScreen />}
 
       <Canvas
-        camera={{ zoom: 3, position: [50, 50, 50] }}
+        camera={{ zoom: 3.5, position: [50, 50, 50] }}
         shadows
         gl={{ localClippingEnabled: true }}
       >

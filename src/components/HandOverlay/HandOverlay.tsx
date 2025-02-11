@@ -4,7 +4,7 @@ import { usePaintingStore } from "../../store";
 
 type Props = {
   handLandmarkArrayRef: MutableRefObject<NormalizedLandmark[][] | null>;
-  handednessRef: MutableRefObject<Category[][] | null>;
+  handednessRef: MutableRefObject<Category[][] | null> | null;
 };
 
 export function HandOverlay({ handLandmarkArrayRef, handednessRef }: Props) {
@@ -88,21 +88,29 @@ export function HandOverlay({ handLandmarkArrayRef, handednessRef }: Props) {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (handLandmarkArrayRef.current && handednessRef.current) {
-        const handsWithHandedness = handLandmarkArrayRef.current.map(
-          (landmarks, index) => ({
-            landmarks,
-            handedness: handednessRef.current![index],
-          })
-        );
+      if (handLandmarkArrayRef.current) {
+        if (handednessRef) {
+          const handsWithHandedness = handLandmarkArrayRef.current.map(
+            (landmarks, index) => ({
+              landmarks,
+              handedness: handednessRef.current![index],
+            })
+          );
 
-        handsWithHandedness.forEach((hand) => {
-          if (hand.handedness[0].categoryName === "Left") {
-            drawHand(ctx, hand.landmarks, "gray"); // Left hand in gray
-          } else if (hand.handedness[0].categoryName === "Right") {
-            drawHand(ctx, hand.landmarks, currentColorRef.current); // Right hand in current color
-          }
-        });
+          handsWithHandedness.forEach((hand) => {
+            if (hand.handedness[0].categoryName === "Left") {
+              drawHand(ctx, hand.landmarks, "gray"); // Left hand in gray
+            } else if (hand.handedness[0].categoryName === "Right") {
+              drawHand(ctx, hand.landmarks, currentColorRef.current); // Right hand in current color
+            }
+          });
+        }
+        // else draw gray hands
+        else {
+          handLandmarkArrayRef.current.forEach((landmarks) => {
+            drawHand(ctx, landmarks, "gray");
+          });
+        }
       }
 
       animationFrameId = requestAnimationFrame(updateHandsOverlay);

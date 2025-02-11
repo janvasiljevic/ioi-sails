@@ -43,7 +43,7 @@ const SceneComposition = ({ landmarksRef }: Props) => {
     showDebugPhysics: false,
     shipSpeed: {
       value: 1,
-      min: 0.5,
+      min: 0,
       max: 5,
     },
   });

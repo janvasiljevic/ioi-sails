@@ -8,6 +8,9 @@ import {
   RigidBody,
 } from "@react-three/rapier";
 import { useGameStore } from "../store";
+import useSound from "use-sound";
+import crashSfx from "../sfx/bass.mp3";
+import winSfx from "../sfx/win.mp3";
 
 function calculateWaveHeight(time: number, x: number, z: number) {
   time -= 0.1;
@@ -30,6 +33,9 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
   const lastAngleRad = useRef<number>(angleRad.current ?? 0);
   const angularVelocity = useRef(1);
   const rotationEuler = useRef(new THREE.Euler(0, 0, 0));
+
+  const [playCrash] = useSound(crashSfx, { volume: 0.5 });
+  const [playWin] = useSound(winSfx, { volume: 0.8 });
 
   const { setGameState } = useGameStore();
 
@@ -110,9 +116,13 @@ const Ship = ({ angleRad, shipVelocity, shipRef }: Props) => {
               [key: string]: string;
             };
 
-            if (data.type === "land") setGameState("gameOver");
-            else if (data.type === "reward") setGameState("gameWon");
-            else throw new Error("Unknown collision type");
+            if (data.type === "land") {
+              playCrash();
+              setGameState("gameOver");
+            } else if (data.type === "reward") {
+              playWin();
+              setGameState("gameWon");
+            } else throw new Error("Unknown collision type");
           }}
         />
       </RigidBody>

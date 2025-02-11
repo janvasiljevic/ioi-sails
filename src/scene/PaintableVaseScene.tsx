@@ -7,6 +7,7 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Leva } from "leva";
 import {
   MutableRefObject,
   Suspense,
@@ -15,14 +16,13 @@ import {
   useState,
 } from "react";
 import * as THREE from "three";
+import EditorOverlay from "../components/EditorOverlay/EditorOverlay";
+import SubmittedMessage from "../components/EditorOverlay/SubmittedMessage";
 import { HandOverlay } from "../components/HandOverlay/HandOverlay";
 import HandRecognition from "../recognition/HandRecognition";
 import { usePaintingStore } from "../store";
-import { isHandOpen, isIndexFingerPointing } from "../utilts";
 import { supabase } from "../supa-client";
-import EditorOverlay from "../components/EditorOverlay/EditorOverlay";
-import styles from "./../components/common/common.module.css";
-import { Leva } from "leva";
+import { isHandOpen, isIndexFingerPointing } from "../utilts";
 
 type Props = {
   handLandmarkArrayRef: MutableRefObject<NormalizedLandmark[][] | null>;
@@ -253,14 +253,7 @@ export default function PaintableVaseScene() {
         handLandmarkArrayRef={handLandmarkArrayRef}
         handednessRef={handednessRef}
       />
-      {submitted && (
-        <div className={styles.container} style={{ opacity: 1, zIndex: 2 }}>
-          <p className={styles.message}>Thanks for submitting your artifact.</p>
-          <p className={styles.submessage}>
-            Another adventurer will find it soon.
-          </p>
-        </div>
-      )}
+      {submitted && <SubmittedMessage />}
 
       <Leva hidden />
 
