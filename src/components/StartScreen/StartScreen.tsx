@@ -23,7 +23,6 @@ const StartScreen = ({ landmarks }: Props) => {
     setTimeout(() => setShown(true), 100);
   }, []);
 
-  // Every 100 ms check if two hands are detected
   useEffect(() => {
     const interval = setInterval(() => {
       if (

@@ -26,7 +26,7 @@ function App() {
   const landmarksRef = useRef<NormalizedLandmark[][] | null>([]);
   const handednessRef = useRef<Category[][] | null>(null);
 
-  const [play] = useSound(boopSfx);
+  const [play, { stop }] = useSound(boopSfx);
 
   const { gameState } = useGameStore();
 
@@ -34,7 +34,10 @@ function App() {
     if (gameState === "normal") {
       play();
     }
-  }, [gameState, play]);
+    if (gameState === "editor") {
+      stop();
+    }
+  }, [gameState, play, stop]);
 
   if (gameState === "editor") {
     return <PaintableVaseScene />;
@@ -56,7 +59,7 @@ function App() {
 
       {gameState === "start" && <StartScreen landmarks={landmarksRef} />}
       {gameState === "gameOver" && <GameOverScreen />}
-      {gameState === "gameWon" && <GameWonScreen />}
+      {gameState === "gameWon" && <GameWonScreen landmarks={landmarksRef} />}
 
       <Canvas
         camera={{ zoom: 3.5, position: [50, 50, 50] }}
